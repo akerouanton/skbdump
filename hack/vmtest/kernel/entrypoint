@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -x
+
+# We can't mount directly the .config file to /build/linux-*/.config. That's
+# because make targets try to cp it back and forth -- this is going to fail if
+# it's bind-mounted. Instead, we mount the .config file in another directory
+# and do a little copy dance to let make targets behave normally.
+cp /build/.config /build/linux-${KERNEL_VERSION}/.config
+
+# Exec in a subshell to give a chance to the line below to be executed. If the
+# subshell returns a non-zero exit code, early exit -- don't try to copy back
+# the config.
+( exec $@ ) || exit
+
+cat /build/linux-${KERNEL_VERSION}/.config >/build/.config
